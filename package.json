@@ -1,0 +1,19 @@
+{
+  "name": "fall2017-module6-group-458942-443664",
+  "version": "1.0.0",
+  "description": "This README would normally document whatever steps are necessary to get your application up and running.",
+  "main": "chatserver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://Eric_Lu17@bitbucket.org/cse330/fall2017-module6-group-458942-443664.git"
+  },
+  "author": "Eric Lu, Jason Sangiamo",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/cse330/fall2017-module6-group-458942-443664#readme",
+  "dependencies": {
+    "socket.io": "^2.0.4"
+  }
+}
