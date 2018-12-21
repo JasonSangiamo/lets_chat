@@ -1,298 +1,349 @@
 <!DOCTYPE html>
 <html>
-   <head>
-      <meta charset="utf-8">
-      <title>Let's Chat</title>
-      <!-- Latest compiled and minified CSS for bootstrap from https://getbootstrap.com/docs/3.3/getting-started/ -->
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-      <script src="/socket.io/socket.io.js"></script>
-      <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-      <script type ="text/javascript">
+  <head>
+    <meta charset="utf-8" />
+    <title>Let's Chat</title>
+    <!--
+      Latest compiled and minified CSS for bootstrap from https://getbootstrap.com/docs/3.3/getting-started/
+    -->
+    <style>
+      ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent; /* make scrollbar transparent */
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+      crossorigin="anonymous"
+    />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript">
       var socketio = io.connect();
       var socket_user;
       var socket_room;
       //Telling the server to add a new user
-      socketio.on("connect", function(){
-       socket_user = prompt("Enter Username: ");
-       socket_room = 'Lobby';
-       socketio.emit("add_user", socket_user, socketio.id);
-       console.log("New User: "+socketio.id);
+      socketio.on("connect", function() {
+        socket_user = prompt("Enter Username: ");
+        socket_room = "Lobby";
+        socketio.emit("add_user", socket_user, socketio.id);
+        console.log("New User: " + socketio.id);
       });
       //rempropting if the server says the username was taken
-      socketio.on("username_taken", function(){
-        socket_user = prompt("Username was already taken, enter another username: ");
+      socketio.on("username_taken", function() {
+        socket_user = prompt(
+          "Username was already taken, enter another username: "
+        );
         socketio.emit("add_user", socket_user, socketio.id);
-        console.log("New User: "+socketio.id);
+        console.log("New User: " + socketio.id);
       });
       //Send a message to another person in the same room
-      socketio.on("message_to_client",function(user, data, color, style) {
+      socketio.on("message_to_client", function(user, data, color, style) {
         //Append an HR thematic break and the escaped HTML of the new message
-        $('#chatlog').append(document.createElement("hr"));
-        
+        $("#chatlog").append(document.createElement("hr"));
+
         //debugging
         console.log("SUBSTRING IS NEXT LINE");
-        console.log(data.substring(data.length-4));
-        
+        console.log(data.substring(data.length - 4));
+
         //checking if an image was sent
-        if(data.substring(data.length-4) == ".jpg" ||data.substring(data.length-4) == ".png"){
-        console.log("image detected!");
-        $('#chatlog').append(user + ":");
-        $('#chatlog').append("<img src='" + data + "' alt='Image not found'>");
-        return;
+        if (
+          data.substring(data.length - 4) == ".jpg" ||
+          data.substring(data.length - 4) == ".png"
+        ) {
+          console.log("image detected!");
+          $("#chatlog").append(user + ":");
+          $("#chatlog").append(
+            "<img src='" + data + "' alt='Image not found'>"
+          );
+          return;
         }
-        
+
         //code for determining styling
         var style_string = "";
         var color_of_text = color[0];
         color_statement = "color: " + color_of_text + "; ";
         style_string += color_statement;
-        if(style[0] === true){
-        style_string += " font-weight: bold;";
+        if (style[0] === true) {
+          style_string += " font-weight: bold;";
         }
-        if(style[1] === true){
-        style_string += " font-style: italic; ";
+        if (style[1] === true) {
+          style_string += " font-style: italic; ";
         }
-        if(style[2] === true){
-        style_string += " text-decoration: underline;";
+        if (style[2] === true) {
+          style_string += " text-decoration: underline;";
         }
-        $('#chatlog').append("<div style = '" + style_string + "'>" + user +": " + data + "</div>");
+        $("#chatlog").append(
+          "<div style = '" + style_string + "'>" + user + ": " + data + "</div>"
+        );
         // old version pre style$('#chatlog').append(document.createTextNode(user+": "+data));
       });
       //used when someone else enters your chat room
       //need to add rooms list
-      socketio.on("new_user",function(user, room, roomslist){
-         if(roomslist[room]==socket_user){
-            $('#users').append('<div>'+user+'<button onclick="kick(\''+user+'\')">Kick</button><button onclick="ban(\''+user+'\')">Ban</button></div>');
-         }
-         else{
-            $('#users').append('<div>'+user+'</div>');
-         }
-         $('#private_options').append('<option>'+user+'</option>');
+      socketio.on("new_user", function(user, room, roomslist) {
+        if (roomslist[room] == socket_user) {
+          $("#users").append(
+            "<div>" +
+              user +
+              "<button onclick=\"kick('" +
+              user +
+              "')\">Kick</button><button onclick=\"ban('" +
+              user +
+              "')\">Ban</button></div>"
+          );
+        } else {
+          $("#users").append("<div>" + user + "</div>");
+        }
+        $("#private_options").append("<option>" + user + "</option>");
       });
-      socketio.on("update_users", function(userLocations, roomslist){
-       $('#users').empty();
-       $('#private_options').empty();
-       console .log("Updating users");
-       $.each(userLocations, function(key, value){
-          if(value == socket_room){
+      socketio.on("update_users", function(userLocations, roomslist) {
+        $("#users").empty();
+        $("#private_options").empty();
+        console.log("Updating users");
+        $.each(userLocations, function(key, value) {
+          if (value == socket_room) {
             //case where user is owner
-             if(roomslist[socket_room]==socket_user){
-                if(key==socket_user){
-                   $('#users').prepend('<div>'+key+' (You) </div>');
-                }
-                else{
-                   $('#users').append('<div>'+key+'<button onclick="kick(\''+key+'\')">Kick</button><button onclick="ban(\''+key+'\')">Ban</button></div>');
-                   $('#private_options').append('<option>'+key+'</option>');
-                }
-             }
-             //case where user is not owner
-             else{
-                if(key==socket_user){
-                   $('#users').prepend('<div>'+key+' (You) </div>');
-                }
-                else{
-                   $('#users').append('<div>'+key+'</div>');
-                   $('#private_options').append('<option>'+key+'</option>');
-                }
-             }
-             
+            if (roomslist[socket_room] == socket_user) {
+              if (key == socket_user) {
+                $("#users").prepend("<div>" + key + " (You) </div>");
+              } else {
+                $("#users").append(
+                  "<div>" +
+                    key +
+                    "<button onclick=\"kick('" +
+                    key +
+                    "')\">Kick</button><button onclick=\"ban('" +
+                    key +
+                    "')\">Ban</button></div>"
+                );
+                $("#private_options").append("<option>" + key + "</option>");
+              }
+            }
+            //case where user is not owner
+            else {
+              if (key == socket_user) {
+                $("#users").prepend("<div>" + key + " (You) </div>");
+              } else {
+                $("#users").append("<div>" + key + "</div>");
+                $("#private_options").append("<option>" + key + "</option>");
+              }
+            }
           }
-       });
+        });
       });
-      socketio.on("update_rooms", function(rooms, private_rooms, banned_users){
-         console.log(socketio.id);
-         $('#rooms').empty();
-         $('#current_room').text(socket_room);
-         //jQuery loop to iterate over the keys of rooms
-         $.each(rooms, function(key, value){
-            if(key == socket_room){
-               $('#rooms').prepend('<div>'+key+' (Current Room) </div>');
+      socketio.on("update_rooms", function(rooms, private_rooms, banned_users) {
+        console.log(socketio.id);
+        $("#rooms").empty();
+        $("#current_room").text(socket_room);
+        //jQuery loop to iterate over the keys of rooms
+        $.each(rooms, function(key, value) {
+          if (key == socket_room) {
+            $("#rooms").prepend("<div>" + key + " (Current Room) </div>");
+          } else if (banned_users.hasOwnProperty(key)) {
+            if (banned_users[key].includes(socket_user)) {
+              console.log("banned from" + key);
             }
-            else if(banned_users.hasOwnProperty(key)){
-               if(banned_users[key].includes(socket_user)){
-               console.log("banned from"+key);
-               }     
+          } else {
+            if (private_rooms.hasOwnProperty(key)) {
+              $("#rooms").append(
+                '<div><a href="#" onclick="joinPrivateRoom(\'' +
+                  key +
+                  "')\">" +
+                  key +
+                  "</a> (Private) </div>"
+              );
+            } else {
+              $("#rooms").append(
+                '<div><a href="#" onclick="switchRooms(\'' +
+                  key +
+                  "')\">" +
+                  key +
+                  "</a></div>"
+              );
             }
-            else{
-               if(private_rooms.hasOwnProperty(key)){
-                  $('#rooms').append('<div><a href="#" onclick="joinPrivateRoom(\''+key+'\')">'+key+'</a> (Private) </div>');
-               }
-               else{
-                  $('#rooms').append('<div><a href="#" onclick="switchRooms(\''+key+'\')">'+key+'</a></div>');
-               }
-            }
-         });
-
+          }
+        });
       });
-      socketio.on("verify_private_room", function(rooms, current_room, private_rooms, password){
-         var correct_password = private_rooms[current_room];
-         if (password==correct_password) {
-            switchRooms(current_room);
-         }
-         else{
-            alert("Access Denied");
-         }
+      socketio.on("verify_private_room", function(
+        rooms,
+        current_room,
+        private_rooms,
+        password
+      ) {
+        var correct_password = private_rooms[current_room];
+        if (password == correct_password) {
+          switchRooms(current_room);
+        } else {
+          alert("Access Denied");
+        }
       });
       //socketio.on("user_disconnect", function(user){
       //   //this line removes
       //   $('#users div:contains('+user+')').remove();
       //
       //});
-      socketio.on("get_kicked", function(){
-        socket_room = 'Lobby';
+      socketio.on("get_kicked", function() {
+        socket_room = "Lobby";
         gotKicked();
       });
-      socketio.on("get_banned", function(){
-        socket_room = 'Lobby';
+      socketio.on("get_banned", function() {
+        socket_room = "Lobby";
         gotBanned();
       });
-      function sendMessage(){
+      function sendMessage() {
         var msg = $("#message_input").val();
-        $('#message_input').val("");
+        $("#message_input").val("");
         //Jason style code
         //also sending style array now. We iterate through all the style inputs and store them in style and color arrays
         //style array is, in order, bold, italic, underline
         var style = [false, false, false];
         var color = [];
         //these are the ids of the checkboxs for styling
-        var style_ids_to_check = ["#bold","#italic","#underline"];
+        var style_ids_to_check = ["#bold", "#italic", "#underline"];
         //these are the ids pf the radio buttons for styling
-        var color_ids_to_check = ["#blue","#red","#black"];
-        $.each(style_ids_to_check, function(index, value)
-         {
-         if ($(value).prop('checked') === true)
-         {
-         style[index] = true;
-         //style.push(value.substring(1, value.length));
-         }
-         });
-         $.each(color_ids_to_check, function(index, value)
-          {
-          if ($(value).prop('checked') === true)
-          {
-          //substring to get rid of the #
-          color.push(value.substring(1,value.length));
+        var color_ids_to_check = ["#blue", "#red", "#black"];
+        $.each(style_ids_to_check, function(index, value) {
+          if ($(value).prop("checked") === true) {
+            style[index] = true;
+            //style.push(value.substring(1, value.length));
           }
-          });
-          //End of Jason style code
-          
-          
-          socketio.emit("message_to_server", msg, color, style);
-          // old emit socketio.emit("message_to_server", msg);
+        });
+        $.each(color_ids_to_check, function(index, value) {
+          if ($(value).prop("checked") === true) {
+            //substring to get rid of the #
+            color.push(value.substring(1, value.length));
+          }
+        });
+        //End of Jason style code
+
+        socketio.emit("message_to_server", msg, color, style);
+        // old emit socketio.emit("message_to_server", msg);
       }
-      function privateMessage(){
-          var target = $("#private_options").val();
-          var msg = $("#private_message_input").val();
-          $('#private_message_input').val("");
-          
-          //Jason style code
-          //also sending style array now. We iterate through all the style inputs and store them in style and color arrays
-          //style array is, in order, bold, italic, underline
-          var style = [false, false, false];
-          var color = [];
-          //these are the ids of the checkboxs for styling
-          var style_ids_to_check = ["#bold","#italic","#underline"];
-          //these are the ids pf the radio buttons for styling
-          var color_ids_to_check = ["#blue","#red","#black"];
-          $.each(style_ids_to_check, function(index, value)
-                 {
-                 if ($(value).prop('checked') === true)
-                 {
-                 style[index] = true;
-                 //style.push(value.substring(1, value.length));
-                 }
-                 });
-                 $.each(color_ids_to_check, function(index, value)
-                        {
-                        if ($(value).prop('checked') === true)
-                        {
-                        //substring to get rid of the #
-                        color.push(value.substring(1,value.length));
-                        }
-                        });
-                        //End of Jason style code
-                        console.log("CLINET SIDE SENDING PRIVATE MESSAGE WITH msg = " + msg);
-                        socketio.emit("private_message", target, msg, color, style);
+      function privateMessage() {
+        var target = $("#private_options").val();
+        var msg = $("#private_message_input").val();
+        $("#private_message_input").val("");
+
+        //Jason style code
+        //also sending style array now. We iterate through all the style inputs and store them in style and color arrays
+        //style array is, in order, bold, italic, underline
+        var style = [false, false, false];
+        var color = [];
+        //these are the ids of the checkboxs for styling
+        var style_ids_to_check = ["#bold", "#italic", "#underline"];
+        //these are the ids pf the radio buttons for styling
+        var color_ids_to_check = ["#blue", "#red", "#black"];
+        $.each(style_ids_to_check, function(index, value) {
+          if ($(value).prop("checked") === true) {
+            style[index] = true;
+            //style.push(value.substring(1, value.length));
+          }
+        });
+        $.each(color_ids_to_check, function(index, value) {
+          if ($(value).prop("checked") === true) {
+            //substring to get rid of the #
+            color.push(value.substring(1, value.length));
+          }
+        });
+        //End of Jason style code
+        console.log("CLINET SIDE SENDING PRIVATE MESSAGE WITH msg = " + msg);
+        socketio.emit("private_message", target, msg, color, style);
       }
-      function createRoom(){
-         var room_name = $("#create_room").val();
-         $("#create_room").val("");
-         socketio.emit("create_room", room_name);
+      function createRoom() {
+        var room_name = $("#create_room").val();
+        $("#create_room").val("");
+        socketio.emit("create_room", room_name);
       }
-      function createPrivateRoom(){
-         var room_name = $("#create_proom").val();
-         $("#create_proom").val("");
-         var password = $("#password").val();
-         $("#password").val("");
-         socketio.emit("create_private_room", room_name, password);
+      function createPrivateRoom() {
+        var room_name = $("#create_proom").val();
+        $("#create_proom").val("");
+        var password = $("#password").val();
+        $("#password").val("");
+        socketio.emit("create_private_room", room_name, password);
       }
-      function switchRooms(room){
-          socket_room=room;
-         socketio.emit('switch_rooms', room);
+      function switchRooms(room) {
+        socket_room = room;
+        socketio.emit("switch_rooms", room);
       }
-      function joinPrivateRoom(room){
-         var password = prompt("Enter the password for this room");
-         socketio.emit('join_private_room', room, password);
+      function joinPrivateRoom(room) {
+        var password = prompt("Enter the password for this room");
+        socketio.emit("join_private_room", room, password);
       }
 
-      function ban(user){
-         console.log("Banning "+user);
-         socketio.emit('ban', user);
+      function ban(user) {
+        console.log("Banning " + user);
+        socketio.emit("ban", user);
       }
-      function kick(user){
-         console.log("Kicking "+user);
-         socketio.emit('kick', user);
+      function kick(user) {
+        console.log("Kicking " + user);
+        socketio.emit("kick", user);
       }
-      function gotKicked(){
-         socketio.emit('got_kicked');
+      function gotKicked() {
+        socketio.emit("got_kicked");
       }
-      function gotBanned(){
-         socketio.emit('got_banned');
+      function gotBanned() {
+        socketio.emit("got_banned");
       }
-      </script>
-   </head>
-   <body>
-      <h1>Welcome to Lets Chat</h1>
-      <h3 style="display:inline; margin: 0px">Current Room: 
-            <span id="current_room">Lobby</span>
-      </h3>
-      <div class = "row">
-         <div class = "col-sm-3">
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <h1>Welcome to Lets Chat</h1>
+        <h3 style="display:inline; margin: 0px">
+          Current Room: <span id="current_room">Lobby</span>
+        </h3>
+        <div class="row">
+          <div class="col-sm-3">
             <h2>Users</h2>
             <div id="users"></div>
-         </div>
-         <div class = "col-sm-3">
+          </div>
+          <div class="col-sm-3">
             <h2>Rooms</h2>
             <div id="rooms"></div>
-         </div>
-         <div class="col-sm-6">
+          </div>
+          <div class="col-sm-6">
             <h4>Create a Room</h4>
-            <input type="text" id="create_room" placeholder="Room Name">
+            <input type="text" id="create_room" placeholder="Room Name" />
             <button onclick="createRoom()">Create Room</button>
-            
+
             <h4>Create a Private Room</h4>
-            <input type="text" id="create_proom" placeholder="Room Name">
-            <input type="text" id="password" placeholder="Password">
-            <button onclick="createPrivateRoom();">Create a Private Room</button>
-         </div>
+            <input type="text" id="create_proom" placeholder="Room Name" />
+            <input type="text" id="password" placeholder="Password" />
+            <button onclick="createPrivateRoom();">
+              Create a Private Room
+            </button>
+          </div>
+        </div>
+        <input type="text" id="message_input" />
+        <button onclick="sendMessage()">Send</button> <br />
+        Private message to:<select id="private_options"> </select>
+        <input type="text" id="private_message_input" />
+        <button onclick="privateMessage();">Send Private Message</button> <br />
+        <span>Style:</span>
+        <input type="checkbox" name="style" id="bold" value="bold" />
+        <span>Bold</span>
+        <input type="checkbox" name="style" id="italic" value="italic" />
+        <span>Italic</span>
+        <input type="checkbox" name="style" id="underline" value="underlined" />
+        <span>Underlined</span> <br />
+        <span>Color:</span>
+        <input
+          type="radio"
+          name="color"
+          id="black"
+          value="black"
+          checked="checked"
+        />
+        <span>Black</span>
+        <input type="radio" name="color" id="blue" value="blue" />
+        <span>Blue</span>
+        <input type="radio" name="color" id="red" value="red" />
+        <span>Red</span>
+        <div id="chatlog" style="max-height: 400px; overflow: scroll; "></div>
       </div>
-      <input type="text" id="message_input"/>
-      <button onclick="sendMessage()">Send</button>
-      <br>
-      Private message to:<select id="private_options">
-      </select>
-      <input type="text" id="private_message_input"/>
-      <button onclick="privateMessage();">Send Private Message</button>
-      <br>
-      <span>Style:</span>
-      <input type="checkbox" name="style" id="bold" value="bold"> <span>Bold</span>
-      <input type="checkbox" name="style" id="italic" value="italic"> <span>Italic</span>
-      <input type="checkbox" name="style" id="underline" value="underlined"> <span>Underlined</span>
-      <br>
-      <span>Color:</span>
-      <input type="radio" name="color" id="black" value="black" checked="checked"> <span>Black</span>
-      <input type="radio" name="color" id="blue" value="blue" > <span>Blue</span>
-      <input type="radio" name="color" id="red" value="red"> <span>Red</span>
-      <div id="chatlog" style="max-height: 400px; overflow: scroll;"></div>
-   </body>
+    </div>
+  </body>
 </html>
